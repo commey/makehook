@@ -8,6 +8,7 @@ POST /v1/extract  → Accept raw text, return structured JSON.
 
 from __future__ import annotations
 
+import hmac
 import logging
 import os
 import time
@@ -35,14 +36,14 @@ app = Flask(__name__)
 def _check_secret() -> str | None:
     """Return an error message if the shared secret header is missing/wrong.
 
-    When ``MAKEHOOK_SECRET`` is unset the check is skipped so local
-    development stays frictionless.
+    Uses constant-time comparison (hmac.compare_digest) to prevent timing attacks.
+    When ``MAKEHOOK_SECRET`` is unset the check is skipped so local development stays frictionless.
     """
     expected = os.getenv("MAKEHOOK_SECRET")
     if not expected:
         return None  # secret not configured → allow all requests
     provided = request.headers.get("X-MakeHook-Secret", "")
-    if provided != expected:
+    if not hmac.compare_digest(provided, expected):
         return "Invalid or missing X-MakeHook-Secret header."
     return None
 

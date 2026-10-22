@@ -39,9 +39,15 @@ def _get_client() -> instructor.Instructor:
     from the environment, making it compatible with both OpenAI and any
     OpenAI-compatible provider (e.g. LiteLLM proxy, Azure, Ollama).
     """
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise RuntimeError(
+            "OPENAI_API_KEY environment variable is missing. "
+            "Please check your .env configuration."
+        )
     base_url = os.getenv("OPENAI_BASE_URL")
     openai_client = OpenAI(
-        api_key=os.environ["OPENAI_API_KEY"],
+        api_key=api_key,
         base_url=base_url,
     )
     return instructor.from_openai(openai_client)
